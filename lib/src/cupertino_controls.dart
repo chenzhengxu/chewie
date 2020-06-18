@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:math' as math;
 import 'dart:ui' as ui;
+import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:chewie/src/chewie_player.dart';
 import 'package:chewie/src/chewie_progress_colors.dart';
@@ -10,6 +12,9 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:open_iconic_flutter/open_iconic_flutter.dart';
 import 'package:video_player/video_player.dart';
+
+const String bgImageString = 'iVBORw0KGgoAAAANSUhEUgAAAFoAAABLCAYAAADwIpA8AAAAAXNSR0IArs4c6QAAAERlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAA6ABAAMAAAABAAEAAKACAAQAAAABAAAAWqADAAQAAAABAAAASwAAAAAU/DWFAAAB/0lEQVR4Ae3dMWobUQAG4XgNgQgTlJBeVUpXOlHqkGvkAjmAz5I6qPIh1ATcGDUCKe+BOyMPQVPOlu9fTfEhtty9eTeu7Xb75XA4fFuW5f50On2aZ13XCQzLp2H5uFqtHna73d+bF+RfI3t3XbpfXxB4Htg/btfr9fdxw9cLN3V8vcD74/H4efzDl/vrWxXeEpjGS8/kt4icbRovTqoKCQRNQtIetARJmaBJSNqDliApEzQJSXvQEiRlgiYhaQ9agqRM0CQk7UFLkJQJmoSkPWgJkjJBk5C0By1BUiZoEpL2oCVIygRNQtIetARJmaBJSNqDliApEzQJSXvQEiRlgiYhaQ9agqRM0CQk7UFLkJQJmoSkPWgJkjJBk5C0By1BUiZoEpL2oCVIygRNQtIetARJmaBJSNqDliApEzQJSXvQEiRlgiYhaQ9agqRM0CQk7UFLkJQJmoSkPWgJkjJBk5C0By1BUiZoEpL2oCVIygRNQtIetARJmaBJSNqDliApEzQJSXvQEiRlgiYhaQ9agqRM0CQk7UFLkJQJmoSkPWgJkjJBk5C0By1BUiZoEpL2oCVIygRNQtI+3/H/JLXKXBCYxvMd/48X9o4lgWm8zA+yjN6z1CzzWmB+h+Xhdr/fHzabze+Xb4V8PJ/PH17f28n/CszHxbD8M5B/zi8L/QMZlkEJY3+evAAAAABJRU5ErkJggg==';
+Uint8List bgImageMemory = base64Decode(bgImageString);
 
 class CupertinoControls extends StatefulWidget {
   const CupertinoControls({
@@ -77,8 +82,7 @@ class _CupertinoControlsState extends State<CupertinoControls> {
           absorbing: _hideStuff,
           child: Column(
             children: <Widget>[
-              _buildTopBar(
-                  backgroundColor, iconColor, barHeight, buttonPadding),
+              _buildTopBar(backgroundColor, iconColor, barHeight, buttonPadding),
               _buildHitArea(),
               _buildBottomBar(backgroundColor, iconColor, barHeight),
             ],
@@ -127,35 +131,34 @@ class _CupertinoControlsState extends State<CupertinoControls> {
         color: Colors.transparent,
         alignment: Alignment.bottomCenter,
         margin: EdgeInsets.all(marginSize),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(10.0),
-          child: BackdropFilter(
-            filter: ui.ImageFilter.blur(
-              sigmaX: 10.0,
-              sigmaY: 10.0,
+        child: Container(
+          decoration: BoxDecoration(
+            image: DecorationImage(
+              fit: BoxFit.fill,
+              centerSlice: Rect.fromLTWH(10, 10, 70, 55),
+              image: MemoryImage(bgImageMemory, scale: 3),
             ),
-            child: Container(
-              height: barHeight,
-              color: backgroundColor,
-              child: chewieController.isLive
-                  ? Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: <Widget>[
-                        _buildPlayPause(controller, iconColor, barHeight),
-                        _buildLive(iconColor),
-                      ],
-                    )
-                  : Row(
-                      children: <Widget>[
-                        _buildSkipBack(iconColor, barHeight),
-                        _buildPlayPause(controller, iconColor, barHeight),
-                        _buildSkipForward(iconColor, barHeight),
-                        _buildPosition(iconColor),
-                        _buildProgressBar(),
-                        _buildRemaining(iconColor)
-                      ],
-                    ),
-            ),
+          ),
+          child: Container(
+            height: barHeight,
+            child: chewieController.isLive
+                ? Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: <Widget>[
+                      _buildPlayPause(controller, iconColor, barHeight),
+                      _buildLive(iconColor),
+                    ],
+                  )
+                : Row(
+                    children: <Widget>[
+                      _buildSkipBack(iconColor, barHeight),
+                      _buildPlayPause(controller, iconColor, barHeight),
+                      _buildSkipForward(iconColor, barHeight),
+                      _buildPosition(iconColor),
+                      _buildProgressBar(),
+                      _buildRemaining(iconColor)
+                    ],
+                  ),
           ),
         ),
       ),
@@ -183,25 +186,27 @@ class _CupertinoControlsState extends State<CupertinoControls> {
       child: AnimatedOpacity(
         opacity: _hideStuff ? 0.0 : 1.0,
         duration: Duration(milliseconds: 300),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(10.0),
-          child: BackdropFilter(
-            filter: ui.ImageFilter.blur(sigmaX: 10.0),
-            child: Container(
-              height: barHeight,
-              padding: EdgeInsets.only(
-                left: buttonPadding,
-                right: buttonPadding,
-              ),
-              color: backgroundColor,
-              child: Center(
-                child: Icon(
-                  chewieController.isFullScreen
-                      ? OpenIconicIcons.fullscreenExit
-                      : OpenIconicIcons.fullscreenEnter,
-                  color: iconColor,
-                  size: 12.0,
-                ),
+        child: Container(
+          decoration: BoxDecoration(
+            image: DecorationImage(
+              fit: BoxFit.fill,
+              centerSlice: Rect.fromLTWH(10, 10, 70, 55),
+              image: MemoryImage(bgImageMemory, scale: 3),
+            ),
+          ),
+          child: Container(
+            height: barHeight,
+            padding: EdgeInsets.only(
+              left: buttonPadding,
+              right: buttonPadding,
+            ),
+            child: Center(
+              child: Icon(
+                chewieController.isFullScreen
+                    ? OpenIconicIcons.fullscreenExit
+                    : OpenIconicIcons.fullscreenEnter,
+                color: iconColor,
+                size: 12.0,
               ),
             ),
           ),
@@ -250,26 +255,26 @@ class _CupertinoControlsState extends State<CupertinoControls> {
       child: AnimatedOpacity(
         opacity: _hideStuff ? 0.0 : 1.0,
         duration: Duration(milliseconds: 300),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(10.0),
-          child: BackdropFilter(
-            filter: ui.ImageFilter.blur(sigmaX: 10.0),
-            child: Container(
-              color: backgroundColor,
-              child: Container(
-                height: barHeight,
-                padding: EdgeInsets.only(
-                  left: buttonPadding,
-                  right: buttonPadding,
-                ),
-                child: Icon(
-                  (_latestValue != null && _latestValue.volume > 0)
-                      ? Icons.volume_up
-                      : Icons.volume_off,
-                  color: iconColor,
-                  size: 16.0,
-                ),
-              ),
+        child: Container(
+          decoration: BoxDecoration(
+            image: DecorationImage(
+              fit: BoxFit.fill,
+              centerSlice: Rect.fromLTWH(10, 10, 70, 55),
+              image: MemoryImage(bgImageMemory, scale: 3),
+            ),
+          ),
+          child: Container(
+            height: barHeight,
+            padding: EdgeInsets.only(
+              left: buttonPadding,
+              right: buttonPadding,
+            ),
+            child: Icon(
+              (_latestValue != null && _latestValue.volume > 0)
+                  ? Icons.volume_up
+                  : Icons.volume_off,
+              color: iconColor,
+              size: 16.0,
             ),
           ),
         ),
@@ -394,12 +399,12 @@ class _CupertinoControlsState extends State<CupertinoControls> {
         left: marginSize,
       ),
       child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: <Widget>[
           chewieController.allowFullScreen
               ? _buildExpandButton(
                   backgroundColor, iconColor, barHeight, buttonPadding)
               : Container(),
-          Expanded(child: Container()),
           chewieController.allowMuting
               ? _buildMuteButton(controller, backgroundColor, iconColor,
                   barHeight, buttonPadding)

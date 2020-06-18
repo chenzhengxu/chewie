@@ -223,20 +223,16 @@ class _MaterialControlsState extends State<MaterialControls> {
       child: AnimatedOpacity(
         opacity: _hideStuff ? 0.0 : 1.0,
         duration: Duration(milliseconds: 300),
-        child: ClipRect(
-          child: Container(
-            child: Container(
-              height: barHeight,
-              padding: EdgeInsets.only(
-                left: 8.0,
-                right: 8.0,
-              ),
-              child: Icon(
-                (_latestValue != null && _latestValue.volume > 0)
-                    ? Icons.volume_up
-                    : Icons.volume_off,
-              ),
-            ),
+        child: Container(
+          height: barHeight,
+          padding: EdgeInsets.only(
+            left: 8.0,
+            right: 8.0,
+          ),
+          child: Icon(
+            (_latestValue != null && _latestValue.volume > 0)
+                ? Icons.volume_up
+                : Icons.volume_off,
           ),
         ),
       ),
